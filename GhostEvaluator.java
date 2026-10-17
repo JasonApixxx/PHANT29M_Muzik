@@ -8,7 +8,7 @@ import java.util.List;
 
 public class GhostEvaluator extends JFrame {
 
-    // Палитра тёмной темы
+    // Палитра темной темы
     private static final Color BG_DARK = new Color(11, 15, 23);
     private static final Color CARD_BG = new Color(18, 24, 36);
     private static final Color CARD_BORDER = new Color(31, 41, 61);
@@ -16,33 +16,28 @@ public class GhostEvaluator extends JFrame {
     private static final Color TEXT_MUTED = new Color(156, 163, 175);
     private static final Color ACCENT_PURPLE = new Color(168, 85, 247);
 
-    // Градации для слайдеров
+    // Градации и цвета
     private static final String[] GRADES_VIVOZ = {"невывоз", "попытка", "неплохо", "верю"};
     private static final Color[] COLORS_VIVOZ = {
-            new Color(255, 51, 102), new Color(255, 153, 51), new Color(0, 210, 255), new Color(168, 85, 247)
+            new Color(255, 51, 102),
+            new Color(255, 153, 51),
+            new Color(0, 210, 255),
+            new Color(168, 85, 247)
     };
 
     private static final String[] GRADES_MUSIC = {"дно", "земля", "облака", "космос"};
     private static final Color[] COLORS_MUSIC = {
-            new Color(255, 51, 102), new Color(255, 153, 51), new Color(0, 210, 255), new Color(168, 85, 247)
+            new Color(255, 51, 102),
+            new Color(255, 153, 51),
+            new Color(0, 210, 255),
+            new Color(168, 85, 247)
     };
 
     private static final String[] GRADES_REPEAT = {"уницикл", "велик", "квадрацикл"};
     private static final Color[] COLORS_REPEAT = {
-            new Color(255, 51, 102), new Color(255, 153, 51), new Color(168, 85, 247)
-    };
-
-    // 9 уникальных оттенков пламени для каждой возможной суммы (от 0 до 8)
-    private static final Color[] FLAME_TIERS = {
-            new Color(15, 15, 20),      // 0: Чёрный огонь (Abyssal Black)
-            new Color(110, 15, 35),     // 1: Тлеющий тёмно-бордовый
-            new Color(230, 35, 60),     // 2: Кроваво-красный
-            new Color(255, 110, 20),    // 3: Огненно-оранжевый
-            new Color(255, 195, 30),    // 4: Янтарно-золотой
-            new Color(16, 215, 140),    // 5: Изумрудно-бирюзовый
-            new Color(0, 215, 255),     // 6: Неоновый кибер-голубой
-            new Color(105, 50, 245),    // 7: Глубокий индиго
-            new Color(175, 40, 255)     // 8: Насыщенный ультра-фиолетовый (Максимум)
+            new Color(255, 51, 102),
+            new Color(255, 153, 51),
+            new Color(168, 85, 247)
     };
 
     private final Map<String, CriterionRow> rows = new LinkedHashMap<>();
@@ -51,7 +46,7 @@ public class GhostEvaluator extends JFrame {
     public GhostEvaluator() {
         setTitle("PHANT29M");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(680, 750);
+        setSize(680, 800);
         setLocationRelativeTo(null);
         getContentPane().setBackground(BG_DARK);
 
@@ -67,7 +62,7 @@ public class GhostEvaluator extends JFrame {
         // Шапка с названием PHANT29M
         JLabel header = new JLabel("PHANT29M");
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
-        header.setFont(new Font("Segoe UI Black", Font.BOLD, 32));
+        header.setFont(new Font("Segoe UI Black", Font.BOLD, 30));
         header.setForeground(ACCENT_PURPLE);
         root.add(header);
         root.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -108,7 +103,7 @@ public class GhostEvaluator extends JFrame {
         root.add(calcBtn);
         root.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        // Зона огня
+        // Зона огня вместо текстового поля
         firePanel = new FirePanel();
         firePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
         firePanel.setPreferredSize(new Dimension(600, 180));
@@ -122,29 +117,43 @@ public class GhostEvaluator extends JFrame {
         int musicVal = rows.get("Понимание музыки").getValue();
         int repeatVal = rows.get("Лёгкость и репитативность").getValue();
 
-        // Сумма от 0 до 8
+        // Максимум: 3 + 3 + 2 = 8
         int totalScore = vivozVal + musicVal + repeatVal;
-        totalScore = Math.max(0, Math.min(8, totalScore));
+        double percentage = (totalScore / 8.0) * 100.0;
 
-        Color selectedColor = FLAME_TIERS[totalScore];
-        boolean isBlackFire = (totalScore == 0);
+        Color fireColor;
+        String verdictText;
 
-        firePanel.ignite(selectedColor, isBlackFire);
+        if (percentage >= 85) {
+            fireColor = new Color(168, 85, 247); // Фиолетовый (максимум)
+            verdictText = "ВЕРЮ // КОСМОС";
+        } else if (percentage >= 60) {
+            fireColor = new Color(0, 210, 255);  // Голубой
+            verdictText = "НЕПЛОХО // ОБЛАКА";
+        } else if (percentage >= 35) {
+            fireColor = new Color(255, 153, 51); // Оранжевый
+            verdictText = "ПОПЫТКА // ВЕЛИК";
+        } else {
+            fireColor = new Color(255, 51, 102); // Красный
+            verdictText = "НЕВЫВОЗ // ДНО";
+        }
+
+        firePanel.ignite(fireColor, verdictText);
     }
 
-    // Компонент живого огня с поддержкой чёрного пламени
+    // Компонент живого огня
     private static class FirePanel extends JPanel {
         private final List<Particle> particles = new ArrayList<>();
         private final Random random = new Random();
         private Color flameColor = new Color(168, 85, 247);
-        private boolean isBlackFire = false;
+        private String bannerText = "";
         private boolean active = false;
 
         public FirePanel() {
             setBackground(CARD_BG);
             setBorder(BorderFactory.createLineBorder(CARD_BORDER, 1));
 
-            // ~60 кадров в секунду
+            // Таймер физики и отрисовки частиц (~60 FPS)
             javax.swing.Timer timer = new javax.swing.Timer(16, e -> {
                 if (active) {
                     updateParticles();
@@ -154,9 +163,9 @@ public class GhostEvaluator extends JFrame {
             timer.start();
         }
 
-        public void ignite(Color color, boolean isBlack) {
+        public void ignite(Color color, String text) {
             this.flameColor = color;
-            this.isBlackFire = isBlack;
+            this.bannerText = text;
             this.active = true;
             particles.clear();
         }
@@ -166,24 +175,24 @@ public class GhostEvaluator extends JFrame {
             int h = getHeight();
             if (w <= 0 || h <= 0) return;
 
-            // Генерация пламени
-            int spawnCount = isBlackFire ? 12 : 9;
-            for (int i = 0; i < spawnCount; i++) {
-                float px = (float) (w / 2.0 + (random.nextGaussian() * (w * 0.20)));
-                float py = h - 8;
-                float vx = (float) (random.nextGaussian() * 0.85);
-                float vy = -(2.6f + random.nextFloat() * 4.2f);
-                float size = isBlackFire ? (24f + random.nextFloat() * 28f) : (20f + random.nextFloat() * 26f);
+            // Порождаем новые частицы огня
+            for (int i = 0; i < 7; i++) {
+                float px = (float) (w / 2.0 + (random.nextGaussian() * (w * 0.22)));
+                float py = h - 10;
+                float vx = (float) (random.nextGaussian() * 0.8);
+                float vy = -(2.5f + random.nextFloat() * 4.0f);
+                float size = 18f + random.nextFloat() * 22f;
                 particles.add(new Particle(px, py, vx, vy, size));
             }
 
+            // Обновляем состояние
             Iterator<Particle> it = particles.iterator();
             while (it.hasNext()) {
                 Particle p = it.next();
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= (isBlackFire ? 0.016f : 0.020f);
-                p.size *= (isBlackFire ? 0.985f : 0.965f);
+                p.life -= 0.022f;
+                p.size *= 0.965f;
                 if (p.life <= 0 || p.size <= 2f) {
                     it.remove();
                 }
@@ -193,34 +202,44 @@ public class GhostEvaluator extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (!active) return;
-
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+            if (!active) {
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                g2.setColor(new Color(75, 85, 99));
+                FontMetrics fm = g2.getFontMetrics();
+                String tip = "НАЖМИ «СФОРМИРОВАТЬ ВЕРДИКТ» ЧТОБЫ ЗАЖЕЧЬ ОГОНЬ";
+                g2.drawString(tip, (getWidth() - fm.stringWidth(tip)) / 2, getHeight() / 2 + 5);
+                g2.dispose();
+                return;
+            }
+
+            // Рендерим пламя частицами
             for (Particle p : particles) {
                 float alpha = Math.max(0f, Math.min(1f, p.life));
+                // Смешение основного цвета пламени с белым в ядре
+                int red = Math.min(255, (int) (flameColor.getRed() + (255 - flameColor.getRed()) * (1f - alpha * 0.5f)));
+                int green = Math.min(255, (int) (flameColor.getGreen() + (255 - flameColor.getGreen()) * (1f - alpha * 0.7f)));
+                int blue = Math.min(255, (int) (flameColor.getBlue() + (255 - flameColor.getBlue()) * (1f - alpha * 0.5f)));
 
-                if (isBlackFire) {
-                    // Чёрное пламя: дымные полупрозрачные темные кольца с фиолетово-пепельной каймой
-                    int shade = Math.max(3, (int) (18 * alpha));
-                    int violetTint = Math.max(6, (int) (40 * (1f - alpha)));
-                    g2.setColor(new Color(shade + violetTint / 2, shade, shade + violetTint, (int) (alpha * 200)));
-                    g2.fillOval((int) (p.x - p.size / 2), (int) (p.y - p.size / 2), (int) p.size, (int) p.size);
-
-                    // Темный контур дыма
-                    g2.setColor(new Color(5, 5, 8, (int) (alpha * 120)));
-                    g2.drawOval((int) (p.x - p.size / 2), (int) (p.y - p.size / 2), (int) p.size, (int) p.size);
-                } else {
-                    // Цветное пламя: яркое ядро и насыщенный ореол
-                    int red = Math.min(255, (int) (flameColor.getRed() + (255 - flameColor.getRed()) * (1f - alpha * 0.40f)));
-                    int green = Math.min(255, (int) (flameColor.getGreen() + (255 - flameColor.getGreen()) * (1f - alpha * 0.60f)));
-                    int blue = Math.min(255, (int) (flameColor.getBlue() + (255 - flameColor.getBlue()) * (1f - alpha * 0.40f)));
-
-                    g2.setColor(new Color(red, green, blue, (int) (alpha * 175)));
-                    g2.fillOval((int) (p.x - p.size / 2), (int) (p.y - p.size / 2), (int) p.size, (int) p.size);
-                }
+                g2.setColor(new Color(red, green, blue, (int) (alpha * 170)));
+                g2.fillOval((int) (p.x - p.size / 2), (int) (p.y - p.size / 2), (int) p.size, (int) p.size);
             }
+
+            // Неоновый текст вердикта прямо поверх огня
+            g2.setFont(new Font("Segoe UI Black", Font.BOLD, 22));
+            FontMetrics fm = g2.getFontMetrics();
+            int tx = (getWidth() - fm.stringWidth(bannerText)) / 2;
+            int ty = (getHeight() / 2) + 8;
+
+            // Теневое свечение
+            g2.setColor(new Color(11, 15, 23, 200));
+            g2.drawString(bannerText, tx + 2, ty + 2);
+
+            // Основной текст в тон пламени
+            g2.setColor(Color.WHITE);
+            g2.drawString(bannerText, tx, ty);
 
             g2.dispose();
         }
@@ -238,7 +257,7 @@ public class GhostEvaluator extends JFrame {
         }
     }
 
-    // Карточка критерия
+    // Панель карточки критерия
     private static class CriterionRow extends JPanel {
         private final JSlider slider;
         private final JLabel valueLabel;
@@ -257,6 +276,7 @@ public class GhostEvaluator extends JFrame {
             ));
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 115));
 
+            // Название критерия и бейдж
             JPanel top = new JPanel(new BorderLayout());
             top.setOpaque(false);
 
@@ -272,6 +292,7 @@ public class GhostEvaluator extends JFrame {
             add(top);
             add(Box.createRigidArea(new Dimension(0, 8)));
 
+            // Ползунок с призраком
             slider = new JSlider(0, grades.length - 1, 0);
             slider.setOpaque(false);
             slider.setUI(new GhostSliderUI(slider, colors));
@@ -283,6 +304,7 @@ public class GhostEvaluator extends JFrame {
             add(slider);
             add(Box.createRigidArea(new Dimension(0, 4)));
 
+            // Подписи градаций
             JPanel ticks = new JPanel(new GridLayout(1, grades.length));
             ticks.setOpaque(false);
             for (int i = 0; i < grades.length; i++) {
@@ -302,7 +324,7 @@ public class GhostEvaluator extends JFrame {
         }
     }
 
-    // Кастомный рендерер ползунка-призрака
+    // Слайдер с бегунком-призраком
     private static class GhostSliderUI extends BasicSliderUI {
         private final Color[] colors;
 
