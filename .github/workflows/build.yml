@@ -18,15 +18,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Standalone Windows EXE
+      - name: Compile JAR with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Build Standalone EXE with jpackage
         shell: cmd
         run: |
-          javac -encoding UTF-8 GhostEvaluator.java
-          jar cfe PHANT29M.jar GhostEvaluator *.class
-          jpackage --input . --name "PHANT29M" --main-jar PHANT29M.jar --main-class GhostEvaluator --type app-image --win-console false
+          mkdir out
+          jpackage --input target --name "PHANT29M" --main-jar PHANT29M-1.0.jar --main-class GhostEvaluator --type app-image --dest out --win-console false
 
-      - name: Upload Finished EXE
+      - name: Upload Only Ready EXE Folder
         uses: actions/upload-artifact@v4
         with:
           name: PHANT29M-Windows-Ready
-          path: PHANT29M/
+          path: out/PHANT29M/
