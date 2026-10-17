@@ -25,7 +25,7 @@ jobs:
         shell: cmd
         run: |
           mkdir out
-          jpackage --input target --name "PHANT29M" --main-jar PHANT29M-1.0.jar --main-class GhostEvaluator --type app-image --dest out --win-console false
+          jpackage --input target --name "PHANT29M" --main-jar PHANT29M-1.0.jar --main-class GhostEvaluator --type app-image --dest out
 
       - name: Upload Only Ready EXE Folder
         uses: actions/upload-artifact@v4
